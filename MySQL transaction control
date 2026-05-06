@@ -1,1 +1,40 @@
+START TRANSACTION;
 
+UPDATE customer
+SET email = 'newemail@example.com'
+WHERE customer_id = 1;
+
+-- Undo the change
+ROLLBACK;
+
+START TRANSACTION;
+
+-- First update
+UPDATE payment
+SET amount = amount + 10
+WHERE payment_id = 1;
+
+-- Create savepoint
+SAVEPOINT sp1;
+
+-- Second update
+UPDATE payment
+SET amount = amount + 20
+WHERE payment_id = 2;
+
+-- Rollback only second update
+ROLLBACK TO sp1;
+
+-- Commit remaining changes
+COMMIT;
+
+SET AUTOCOMMIT = 0;
+
+INSERT INTO customer (store_id, first_name, last_name, email, address_id)
+VALUES (1, 'John', 'Doe', 'john.doe@example.com', 5);
+
+-- Undo insert
+ROLLBACK;
+
+-- Turn autocommit back on (optional)
+SET AUTOCOMMIT = 1;
