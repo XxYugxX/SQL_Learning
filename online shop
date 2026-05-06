@@ -1,0 +1,70 @@
+DROP TABLE IF EXISTS products;
+
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    category VARCHAR(50),
+    price DECIMAL(10,2),
+    in_stock BOOLEAN,
+    attributes JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO products (name, category, price, in_stock, attributes)
+VALUES
+('T-Shirt', 'Clothing', 25.00, TRUE, JSON_OBJECT('color', 'red', 'size', 'M')),
+('Jacket', 'Clothing', 80.00, TRUE, JSON_OBJECT('color', 'black', 'waterproof', true)),
+('Smartphone', 'Electronics', 500.00, TRUE, JSON_OBJECT('brand', 'Samsung')),
+('Headphones', 'Electronics', 90.00, TRUE, JSON_OBJECT('waterproof', true)),
+('Smartwatch', 'Electronics', 70.00, TRUE, JSON_OBJECT('waterproof', true)),
+('Vegan Cookbook', 'Books', 30.00, TRUE, JSON_OBJECT('vegan', true)),
+('Novel', 'Books', 15.00, TRUE, JSON_OBJECT()),
+('Vegan Salad', 'Food', 12.00, TRUE, JSON_OBJECT('vegan', true)),
+('Burger', 'Food', 10.00, TRUE, JSON_OBJECT('vegan', false)),
+('Football', 'Sport Items', 40.00, TRUE, JSON_OBJECT('color', 'white'));
+
+SELECT 
+    name,
+    category,
+    attributes->>'$.color' AS color,
+    attributes->>'$.waterproof' AS waterproof,
+    attributes->>'$.vegan' AS vegan
+FROM products;
+
+SELECT name, category
+FROM products
+WHERE attributes->>'$.vegan' = 'true';
+
+SELECT name, price
+FROM products
+WHERE category = 'Electronics'
+AND price < 100
+AND attributes->>'$.waterproof' = 'true';
+
+SELECT name, category
+FROM products
+WHERE attributes->>'$.color' = 'red';
+
+SELECT category, COUNT(*) AS total
+FROM products
+GROUP BY category;
+
+CREATE INDEX idx_vegan 
+ON products ((attributes->>'$.vegan'));
+
+ALTER TABLE products
+ADD vegan_flag VARCHAR(5)
+GENERATED ALWAYS AS (attributes->>'$.vegan') STORED;
+
+CREATE INDEX idx_vegan_flag ON products(vegan_flag);
+
+SELECT name
+FROM products
+WHERE attributes->'$.color' IS NULL;
+
+SELECT name, JSON_PRETTY(attributes)
+FROM products;
+
+UPDATE products
+SET attributes = JSON_SET(attributes, '$.color', 'blue')
+WHERE name = 'T-Shirt';
